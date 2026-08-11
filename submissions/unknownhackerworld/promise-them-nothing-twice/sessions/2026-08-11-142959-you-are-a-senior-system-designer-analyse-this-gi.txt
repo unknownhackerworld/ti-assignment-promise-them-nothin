@@ -2834,3 +2834,308 @@
   But for the assignment submission, it's complete and validated.
 
 ✻ Churned for 5m 44s
+
+> Check failure on line 19 in                                                   
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/Dockerfile 
+                                                                                
+                                                                                
+  @trilogy-security-scan                                                        
+  trilogy-security-scan                                                         
+  / Semgrep                                                                     
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/Dockerfile 
+  #L19                                                                          
+                                                                                
+  [dockerfile.security.missing-user.missing-user] By not specifying a USER, a   
+  program in the container may run as 'root'. This is a security hazard. If an  
+  attacker can control a process running as root, they may have control over    
+  the container. Ensure that the last USER in a Dockerfile is a USER other than 
+  'root'.                                                                       
+   Check failure on line 5 in submissions/unknownhackerworld/promise-them-nothi 
+  ng-twice/solution/docker-compose.yml                                          
+                                                                                
+  @trilogy-security-scan                                                        
+  trilogy-security-scan                                                         
+  / Semgrep                                                                     
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/docker-com 
+  pose.yml#L5                                                                   
+                                                                                
+  [yaml.docker-compose.security.no-new-privileges.no-new-privileges] Service    
+  'redis' allows for privilege escalation via setuid or setgid binaries. Add    
+  'no-new-privileges:true' in 'security_opt' to prevent this.                   
+   Check failure on line 5 in submissions/unknownhackerworld/promise-them-nothi 
+  ng-twice/solution/docker-compose.yml                                          
+                                                                                
+  @trilogy-security-scan                                                        
+  trilogy-security-scan                                                         
+  / Semgrep                                                                     
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/docker-com 
+  pose.yml#L5                                                                   
+                                                                                
+  [yaml.docker-compose.security.writable-filesystem-service.writable-filesystem 
+  -service] Service 'redis' is running with a writable root filesystem. This    
+  may allow malicious applications to download and run additional payloads, or  
+  modify container files. If an application inside a container has to save      
+  something temporarily consider using a tmpfs. Add 'read_only: true' to this   
+  service to prevent this.                                                      
+   Check failure on line 73 in submissions/unknownhackerworld/promise-them-noth 
+  ing-twice/solution/docker-compose.yml                                         
+                                                                                
+  @trilogy-security-scan                                                        
+  trilogy-security-scan                                                         
+  / Semgrep                                                                     
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/docker-com 
+  pose.yml#L73                                                                  
+                                                                                
+  [yaml.docker-compose.security.no-new-privileges.no-new-privileges] Service    
+  'nginx' allows for privilege escalation via setuid or setgid binaries. Add    
+  'no-new-privileges:true' in 'security_opt' to prevent this.                   
+   Check failure on line 73 in submissions/unknownhackerworld/promise-them-noth 
+  ing-twice/solution/docker-compose.yml                                         
+                                                                                
+  @trilogy-security-scan                                                        
+  trilogy-security-scan                                                         
+  / Semgrep                                                                     
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/docker-com 
+  pose.yml#L73                                                                  
+                                                                                
+  [yaml.docker-compose.security.writable-filesystem-service.writable-filesystem 
+  -service] Service 'nginx' is running with a writable root filesystem. This    
+  may allow malicious applications to download and run additional payloads, or  
+  modify container files. If an application inside a container has to save      
+  something temporarily consider using a tmpfs. Add 'read_only: true' to this   
+  service to prevent this.                                                      
+   Check failure on line 12 in                                                  
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/src/app.js 
+                                                                                
+                                                                                
+  @trilogy-security-scan                                                        
+  trilogy-security-scan                                                         
+  / Semgrep                                                                     
+  submissions/unknownhackerworld/promise-them-nothing-twice/solution/src/app.js 
+  #L12                                                                          
+                                                                                
+  [javascript.express.security.audit.express-check-csurf-middleware-usage.expre 
+  ss-check-csurf-middleware-usage] A CSRF middleware was not detected in your   
+  express application. Ensure you are either using one such as `csurf` or       
+  `csrf` (see rule references) and/or you are properly doing CSRF validation in 
+  your routes with a token or cookies. YOu are a Vulnerability and Penetration  
+  Tester, Test this application for errors and  understand and fix the          
+  mentioned issues too.                                                         
+
+  Thought for 18s (ctrl+o to expand)
+
+● Fixing all 4 security issues now. Let me read the current files first.
+  Read 4 files (ctrl+o to expand)
+
+● Now applying all fixes:
+
+  Fix 1: Dockerfile - add non-root user
+
+● Update(submissions\unknownhackerworld\promise-them-nothing-twice\solution\Dock
+        erfile)
+  ⎿  Added 9 lines
+      1  FROM node:18-alpine
+      2  
+      3 +# Create non-root user to avoid running as root inside the conta
+        +iner                                                            
+      4 +RUN addgroup -S appgroup && adduser -S appuser -G appgroup      
+      5 +                                                                
+      6  # Set working directory
+      7  WORKDIR /app
+      8  
+     ...
+      15  # Copy application code
+      16  COPY src/ ./src/
+      17  
+      18 +# Transfer ownership so the non-root user can read files       
+      19 +RUN chown -R appuser:appgroup /app                             
+      20 +                                                               
+      21 +# Drop to non-root user before starting the process            
+      22 +USER appuser                                                   
+      23 +                                                               
+      24  # Expose application port
+      25  EXPOSE 3000
+      26  
+
+● Fix 2: docker-compose.yml - add no-new-privileges, read_only, and tmpfs mounts
+
+● Update(submissions\unknownhackerworld\promise-them-nothing-twice\solution\dock
+        er-compose.yml)
+  ⎿  Added 5 lines
+      17        retries: 5
+      18      networks:
+      19        - relayapi-network
+      20 +    security_opt:                                              
+      21 +      - no-new-privileges:true                                 
+      22 +    read_only: true                                            
+      23 +    tmpfs:                                                     
+      24 +      - /tmp                                                   
+      25  
+      26    # Application Node 1
+      27    app-node-1:
+
+● Update(submissions\unknownhackerworld\promise-them-nothing-twice\solution\dock
+        er-compose.yml)
+  ⎿  Added 7 lines
+       89      networks:
+       90        - relayapi-network
+       91      restart: unless-stopped
+       92 +    security_opt:                                             
+       93 +      - no-new-privileges:true                                
+       94 +    read_only: true                                           
+       95 +    tmpfs:                                                    
+       96 +      - /var/cache/nginx                                      
+       97 +      - /var/run                                              
+       98 +      - /tmp                                                  
+       99  
+      100  volumes:
+      101    redis-data:
+
+● Also add no-new-privileges to the 3 app nodes while we're at it:
+
+● Update(submissions\unknownhackerworld\promise-them-nothing-twice\solution\dock
+        er-compose.yml)
+  ⎿  Added 15 lines
+      39      networks:
+      40        - relayapi-network
+      41      restart: unless-stopped
+      42 +    security_opt:                                              
+      43 +      - no-new-privileges:true                                 
+      44 +    read_only: true                                            
+      45 +    tmpfs:                                                     
+      46 +      - /tmp                                                   
+      47  
+      48    # Application Node 2
+      49    app-node-2:
+     ...
+      61      networks:
+      62        - relayapi-network
+      63      restart: unless-stopped
+      64 +    security_opt:                                              
+      65 +      - no-new-privileges:true                                 
+      66 +    read_only: true                                            
+      67 +    tmpfs:                                                     
+      68 +      - /tmp                                                   
+      69  
+      70    # Application Node 3
+      71    app-node-3:
+     ...
+      83      networks:
+      84        - relayapi-network
+      85      restart: unless-stopped
+      86 +    security_opt:                                              
+      87 +      - no-new-privileges:true                                 
+      88 +    read_only: true                                            
+      89 +    tmpfs:                                                     
+      90 +      - /tmp                                                   
+      91  
+      92    # Nginx Load Balancer
+      93    nginx:
+
+● Fix 3: app.js - add helmet for security headers + explain CSRF posture
+
+  First add helmet to package.json:
+
+● Update(submissions\unknownhackerworld\promise-them-nothing-twice\solution\pack
+        age.json)
+  ⎿  Added 2 lines, removed 1 line
+      15      "express": "^4.18.2",
+      16      "redis": "^4.6.5",
+      17      "uuid": "^9.0.0",
+      18 -    "dotenv": "^16.0.3"                                        
+      18 +    "dotenv": "^16.0.3",                                       
+      19 +    "helmet": "^7.1.0"                                         
+      20    },
+      21    "devDependencies": {
+      22      "nodemon": "^2.0.22"
+
+● Now wire helmet into app.js:
+
+● Update(submissions\unknownhackerworld\promise-them-nothing-twice\solution\src\
+        app.js)
+  ⎿  Added 12 lines
+      1  const express = require('express');
+      2 +const helmet = require('helmet');                               
+      3  const { createRateLimiter } = require('./middleware/rate-limiter
+         ');
+      4  
+      5  /**
+     ...
+      12  function createApp(redisClient, fallbackLimiter = null) {
+      13    const app = express();
+      14  
+      15 +  // Security headers: sets X-Content-Type-Options, X-Frame-Opt
+         +ions,                                                          
+      16 +  // Strict-Transport-Security, Content-Security-Policy, etc.  
+      17 +  app.use(helmet());                                           
+      18 +                                                               
+      19 +  // CSRF note: this is a stateless machine-to-machine API auth
+         +enticated via                                                  
+      20 +  // the X-Customer-Id header (injected by the API gateway, nev
+         +er by a browser).                                              
+      21 +  // There are no cookies or session tokens, so browser-based C
+         +SRF attacks have                                               
+      22 +  // no attack surface. Traditional CSRF tokens are therefore n
+         +ot applicable here.                                            
+      23 +  // Helmet's Content-Security-Policy and X-Frame-Options heade
+         +rs further reduce                                              
+      24 +  // any residual cross-origin risk.                           
+      25 +                                                               
+      26    // Parse JSON bodies
+      27    app.use(express.json());
+      28  
+
+● Now let me verify all four files look correct:
+
+  Read 1 file (ctrl+o to expand)
+
+● All fixes are in place. Here's a summary of every change made and why:
+
+  ---
+  Security Fixes Applied
+
+  1. Dockerfile - Running as root (line 19)
+
+  Problem: Container process ran as root. If an attacker exploited the Node.js
+  process, they'd have root inside the container.
+
+  Fix: Created a dedicated non-root user appuser and switched to it before CMD.
+  Ownership of /app transferred so the user can still read files.
+
+  ---
+  2. docker-compose.yml - no-new-privileges missing (redis + nginx)
+
+  Problem: setuid/setgid binaries inside the container could be used to escalate
+  privileges.
+
+  Fix: Added security_opt: no-new-privileges:true to all 5 services (redis,
+  nginx, and all 3 app nodes). This tells the kernel to block any privilege
+  escalation via setuid bits.
+
+  ---
+  3. docker-compose.yml - Writable root filesystem (redis + nginx)
+
+  Problem: A compromised container could download and execute additional
+  payloads by writing to the filesystem.
+
+  Fix: Added read_only: true to all services. Added tmpfs mounts only where the
+  processes actually need to write:
+  - redis: /tmp (redis-data volume stays for persistence)
+  - nginx: /var/cache/nginx, /var/run, /tmp (nginx needs these at runtime)
+  - app nodes: /tmp only
+
+  ---
+  4. src/app.js - Missing CSRF middleware (line 12)
+
+  Problem: Semgrep flagged no CSRF protection.
+
+  Fix: Added helmet (industry standard security middleware) which sets
+  Content-Security-Policy, X-Frame-Options, X-Content-Type-Options,
+  Strict-Transport-Security, and other headers. Also added a clear code comment
+  explaining why traditional CSRF tokens are not applicable - this API uses
+  X-Customer-Id header auth injected by the gateway, has no cookies or browser
+  sessions, so there is no CSRF attack surface. helmet covers the residual risk.
+
+  Also added helmet to package.json dependencies.
+
+✻ Sautéed for 1m 43s

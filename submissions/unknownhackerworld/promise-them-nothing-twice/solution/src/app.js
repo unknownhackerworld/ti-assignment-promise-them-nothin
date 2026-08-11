@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const { createRateLimiter } = require('./middleware/rate-limiter');
 
 /**
@@ -10,6 +11,17 @@ const { createRateLimiter } = require('./middleware/rate-limiter');
  */
 function createApp(redisClient, fallbackLimiter = null) {
   const app = express();
+
+  // Security headers: sets X-Content-Type-Options, X-Frame-Options,
+  // Strict-Transport-Security, Content-Security-Policy, etc.
+  app.use(helmet());
+
+  // CSRF note: this is a stateless machine-to-machine API authenticated via
+  // the X-Customer-Id header (injected by the API gateway, never by a browser).
+  // There are no cookies or session tokens, so browser-based CSRF attacks have
+  // no attack surface. Traditional CSRF tokens are therefore not applicable here.
+  // Helmet's Content-Security-Policy and X-Frame-Options headers further reduce
+  // any residual cross-origin risk.
 
   // Parse JSON bodies
   app.use(express.json());
