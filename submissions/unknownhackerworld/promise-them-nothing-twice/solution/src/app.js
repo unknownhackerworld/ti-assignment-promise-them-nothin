@@ -1,5 +1,6 @@
 const express = require('express');
 const helmet = require('helmet');
+const { csrfProtection, csrfTokenHandler } = require('./middleware/csrf-protection');
 const { createRateLimiter } = require('./middleware/rate-limiter');
 
 /**
@@ -12,19 +13,21 @@ const { createRateLimiter } = require('./middleware/rate-limiter');
 function createApp(redisClient, fallbackLimiter = null) {
   const app = express();
 
-  // Security headers: sets X-Content-Type-Options, X-Frame-Options,
+  // Security headers: X-Content-Type-Options, X-Frame-Options,
   // Strict-Transport-Security, Content-Security-Policy, etc.
   app.use(helmet());
 
-  // CSRF note: this is a stateless machine-to-machine API authenticated via
-  // the X-Customer-Id header (injected by the API gateway, never by a browser).
-  // There are no cookies or session tokens, so browser-based CSRF attacks have
-  // no attack surface. Traditional CSRF tokens are therefore not applicable here.
-  // Helmet's Content-Security-Policy and X-Frame-Options headers further reduce
-  // any residual cross-origin risk.
-
   // Parse JSON bodies
   app.use(express.json());
+
+  // CSRF protection for all state-changing requests (POST/PUT/PATCH/DELETE).
+  // GET requests are safe by HTTP definition and are skipped automatically.
+  // See src/middleware/csrf-protection.js for the token/header scheme.
+  app.use(csrfProtection);
+
+  // Issues a CSRF secret + token pair for clients that need to make
+  // state-changing requests. Not rate-limited so infra tooling can always reach it.
+  app.get('/csrf-token', csrfTokenHandler);
 
   // Health check endpoint (before rate limiting to allow monitoring)
   app.get('/health', (req, res) => {
