@@ -1,8 +1,10 @@
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const { csrfProtection, csrfTokenHandler } = require('./middleware/csrf-protection');
+const csrf = require('csurf');
 const { createRateLimiter } = require('./middleware/rate-limiter');
+
+const csrfProtection = csrf({ cookie: true });
 
 /**
  * Create Express application with rate limiting middleware
@@ -21,17 +23,18 @@ function createApp(redisClient, fallbackLimiter = null) {
   // Parse JSON bodies
   app.use(express.json());
 
-  // Required by csrf-protection middleware to read the _csrf_secret cookie
+  // cookie-parser must come before csurf (csurf reads/writes cookies)
   app.use(cookieParser());
 
   // CSRF protection for all state-changing requests (POST/PUT/PATCH/DELETE).
-  // GET requests are safe by HTTP definition and are skipped automatically.
-  // See src/middleware/csrf-protection.js for the double-submit cookie scheme.
+  // csurf stores a secret in a signed cookie and validates _csrf tokens.
   app.use(csrfProtection);
 
-  // Issues a CSRF secret + token pair for clients that need to make
-  // state-changing requests. Not rate-limited so infra tooling can always reach it.
-  app.get('/csrf-token', csrfTokenHandler);
+  // Issues a CSRF token for clients that need to make state-changing requests.
+  // Not rate-limited so infra tooling can always reach it.
+  app.get('/csrf-token', (req, res) => {
+    res.json({ token: req.csrfToken() });
+  });
 
   // Health check endpoint (before rate limiting to allow monitoring)
   app.get('/health', (req, res) => {
