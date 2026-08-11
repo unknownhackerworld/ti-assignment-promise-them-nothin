@@ -1,5 +1,6 @@
 const express = require('express');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const { csrfProtection, csrfTokenHandler } = require('./middleware/csrf-protection');
 const { createRateLimiter } = require('./middleware/rate-limiter');
 
@@ -20,9 +21,12 @@ function createApp(redisClient, fallbackLimiter = null) {
   // Parse JSON bodies
   app.use(express.json());
 
+  // Required by csrf-protection middleware to read the _csrf_secret cookie
+  app.use(cookieParser());
+
   // CSRF protection for all state-changing requests (POST/PUT/PATCH/DELETE).
   // GET requests are safe by HTTP definition and are skipped automatically.
-  // See src/middleware/csrf-protection.js for the token/header scheme.
+  // See src/middleware/csrf-protection.js for the double-submit cookie scheme.
   app.use(csrfProtection);
 
   // Issues a CSRF secret + token pair for clients that need to make
