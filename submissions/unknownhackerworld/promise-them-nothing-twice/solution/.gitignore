@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+# package-lock.json — Allow committing for reproducibility
+
+# Environment variables
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

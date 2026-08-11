@@ -1,0 +1,59 @@
+{
+  "customers": {
+    "customer-a": {
+      "name": "Customer A (Starter tier)",
+      "tier": "Starter",
+      "base_rpm": 300,
+      "schedules": []
+    },
+    "customer-b": {
+      "name": "Customer B (Growth tier)",
+      "tier": "Growth",
+      "base_rpm": 300,
+      "schedules": []
+    },
+    "northwind": {
+      "name": "Northwind Logistics (Enterprise)",
+      "tier": "Enterprise",
+      "base_rpm": 300,
+      "schedules": [
+        {
+          "name": "Nightly batch window",
+          "start_time": "02:00",
+          "end_time": "04:00",
+          "timezone": "UTC",
+          "rpm": 1500,
+          "reason": "Business-critical nightly ETL batch. Contracted exception for batch operations window."
+        }
+      ]
+    },
+    "test-burst": {
+      "name": "Test Customer (for testing)",
+      "tier": "Growth",
+      "base_rpm": 300,
+      "schedules": []
+    },
+    "test-429": {
+      "name": "Test Customer for 429 testing",
+      "tier": "Growth",
+      "base_rpm": 300,
+      "schedules": []
+    },
+    "customer-c": {
+      "name": "Customer C (Growth tier)",
+      "tier": "Growth",
+      "base_rpm": 300,
+      "schedules": []
+    },
+    "customer-d": {
+      "name": "Customer D (Growth tier)",
+      "tier": "Growth",
+      "base_rpm": 300,
+      "schedules": []
+    }
+  },
+  "_metadata": {
+    "description": "Per-customer rate limit policies. Schedules are config-driven and auditable - any Enterprise customer can have time-based quota overrides.",
+    "last_updated": "2026-03-14"
+  }
+}

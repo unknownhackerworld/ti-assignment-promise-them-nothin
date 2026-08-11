@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # Redis - shared state for distributed rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: relayapi-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - relayapi-network
+
+  # Application Node 1
+  app-node-1:
+    build: .
+    container_name: relayapi-app-1
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=3000
+      - MAX_NODES=5
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - relayapi-network
+    restart: unless-stopped
+
+  # Application Node 2
+  app-node-2:
+    build: .
+    container_name: relayapi-app-2
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=3000
+      - MAX_NODES=5
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - relayapi-network
+    restart: unless-stopped
+
+  # Application Node 3
+  app-node-3:
+    build: .
+    container_name: relayapi-app-3
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=3000
+      - MAX_NODES=5
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - relayapi-network
+    restart: unless-stopped
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: relayapi-lb
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app-node-1
+      - app-node-2
+      - app-node-3
+    networks:
+      - relayapi-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+
+networks:
+  relayapi-network:
+    driver: bridge
